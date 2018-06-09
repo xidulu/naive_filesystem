@@ -1,5 +1,7 @@
 #include "bitmap.h"
 #include "directory.h"
+#include "inode.h"
+#include "p5.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -39,9 +41,21 @@ void test_directory() {
     free(result4);
 }
 
+void test_inode() {
+    dev_open();
+    memory_node a;
+    a.one_layer_index = 16;
+    a.two_layer_index = 17;
+    memory_node *t = (memory_node *)malloc(sizeof(memory_node));
+    dump_inode(a, 0);
+    load_inode(t, 0);
+    printf("%d %d \n", t->one_layer_index, t->two_layer_index);
+}
+
 int main(int argc, char const *argv[])
 {
     //test_bitmap();
-    test_directory();
+    //test_directory();
+    
     return 0;
 }

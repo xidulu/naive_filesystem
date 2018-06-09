@@ -1,17 +1,18 @@
-// Directory in this filesystem is basically a string,
-// with special format.
-// To add/create/remove/modify entries in a directory,
-// we only need to load the string, modify it, and dump it back.
-// Format:
-//     ...,len(filename),filename,inode numer,...  
-//     (comma included)
-//     (integer stored as raw string)
-
 #include "directory.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #define d 256
+
+// @author:Xi Wang
+// Directory in this filesystem is basically a string,
+// with special format.
+// To add/create/remove/modify entries in a directory,
+// we only need to load the string, modify it, and dump it back.
+// Format:
+//     ...,len(filename),filename,inode numer,...
+//     (comma included)
+//     (integer stored as raw string)
 
 
 // Helper functoin: string matching

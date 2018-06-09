@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// @author:Xi Wang
+
 // Create a bitmap struct with n bits
 // return a pointer to the bitmap.
 bitmap* create_bitmap(int n) {
