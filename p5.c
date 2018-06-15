@@ -208,8 +208,8 @@ int my_remove(char *path)
         char *new_directory;
         new_directory = removefile(general_buffer, buffer);
         write_inode(cwd_node, new_directory, blockmap);
-        free(new_directory);
-        free(cwd_node);
+        // free(new_directory);
+        // free(cwd_node);
         return find;
       }
     }
@@ -257,8 +257,8 @@ int my_rename(char *old, char *new)
       new_directory = addfile(general_buffer, buffer, node_num);
       write_inode(cwd_node, new_directory, blockmap);
       dump_inode(*cwd_node, cwd_node_num);
-      free(new_directory);
-      free(cwd_node);
+      // free(new_directory);
+      // free(cwd_node);
       return 1;
     }
     else

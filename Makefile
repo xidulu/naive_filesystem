@@ -1,6 +1,8 @@
-CC=gcc
+CC=clang
 MODULE = bitmap.c inode.c directory.c block.c p5.c
-TARGET = $(MODULE) p5.c
+
+build: $(MODULE)
+	$(CC) *.c -o p5.out
 
 unit: $(MODULE)
 	$(CC) $(MODULE) unit.c -o unit_test.out && ./unit_test.out
