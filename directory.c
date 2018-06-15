@@ -95,6 +95,7 @@ char* removefile(char *directory, char *filename) {
     char* new_directory = (char*)malloc(strlen(directory));
     int pos = pattern_search(filename, directory);
     int end = pos + strlen(filename) + 1;
+    // printf("%s\n%s\n", directory, filename);
     while(directory[end] != ',') {
         end++;
     }
@@ -105,21 +106,28 @@ char* removefile(char *directory, char *filename) {
 }
 
 
-// Search for FILENAME in the directory,
-// return its inode number.
+// Search for FILENAME in the current directory,
+// return its inode number.(non-recursive)
 int search_file(char *directory, char *filename) {
     char pattern[500] = "";
+    char* comma = ",";
     int inode_num;
     strcpy(pattern, filename);
+    strcat(pattern, comma);
+    // printf("%s\n", pattern);
     int pos = pattern_search(pattern, directory);
+    if (pos == -1) {
+        return -1;
+    }
     // printf("%d\n", pos);
-    strcat(pattern,",%d");
+    strcat(pattern,"%d");
     sscanf(directory + pos, pattern, &inode_num);
     return inode_num;
 }
 
 int is_empty(char *directory) {
     int len = strlen(directory);
+    // printf("len:%d\n", len);
     if (len == 0) {
         return 1;
     } else {

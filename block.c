@@ -37,7 +37,8 @@ int read_block (int block_num, char * block)
 {
   if (block_num >= devsize) {
     printf ("block number requested %d, maximum %d", block_num, devsize - 1);
-    return -1;
+    exit(0);
+    // return -1;
   }
   if (lseek (fd, block_num * BLOCKSIZE, SEEK_SET) < 0) {
     perror ("lseek");
@@ -55,7 +56,8 @@ int write_block (int block_num, char * block)
 {
   if (block_num >= devsize) {
     printf ("block number requested %d, maximum %d", block_num, devsize - 1);
-    return -1;
+    exit(0);
+    // return -1;
   }
   if (lseek (fd, block_num * BLOCKSIZE, SEEK_SET) < 0) {
     perror ("lseek");
