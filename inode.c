@@ -17,6 +17,15 @@
 //  and then free the extra blocks(or allocate new blocks).
 
 
+// A buffer for writing index block num to the disk,
+// the queue will be dumped into disk if full.
+static char _buffer_queue[BLOCKSIZE];
+static int _buffer_queue_num = -1;
+static int _buffer_queue_dumped = 0;
+
+static char _two_layer_index_cache[1024] = {0};
+static int  _two_layer_index_cache_num = -1;
+
 // Helper function,
 // add a new block B(block number) to NODE's index,
 // the procedure is similar with FIND_BLOCK_ADDRESS().
@@ -69,16 +78,38 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
         int index_num = offset / ONE_LAYER_INDEX_NUM;
         int index_offset = offset % ONE_LAYER_INDEX_NUM;
         char buffer[1024];
-        read_block(node->two_layer_index, buffer);
+        if (_two_layer_index_cache_num == node->two_layer_index) {
+            memcpy(buffer, _two_layer_index_cache, BLOCKSIZE);
+        } else {
+            read_block(node->two_layer_index, buffer);
+            memcpy(_two_layer_index_cache, buffer, BLOCKSIZE);
+            _two_layer_index_cache_num = node->two_layer_index;
+        }
         int index_address;
         memcpy(&index_address,
                 buffer + (index_num) * sizeof(int),
                 4);
-        read_block(index_address, buffer);
-        memcpy(buffer + (index_offset) * sizeof(int),
-                &b,
-                4);
-        write_block(index_address, buffer);
+        if (_buffer_queue_num == index_address) {
+            memcpy(_buffer_queue + (index_offset) * sizeof(int),
+                   &b,
+                   4);
+            if (index_offset == (ONE_LAYER_INDEX_NUM - 1)) {
+                write_block(_buffer_queue_num, _buffer_queue);
+                memset(_buffer_queue, 0, sizeof(_buffer_queue));
+                _buffer_queue_dumped = 1;
+            }
+        } else {
+            _buffer_queue_dumped = -1;
+            read_block(index_address, _buffer_queue);
+            _buffer_queue_num = index_address;
+            memcpy(_buffer_queue + (index_offset) * sizeof(int),
+                   &b,
+                   4);
+        }
+        // memcpy(buffer + (index_offset) * sizeof(int),
+        //         &b,
+        //         4);
+        // write_block(index_address, buffer);
         node->block_count++;
     }
 }
@@ -148,6 +179,9 @@ static void reallocate_blocks(memory_node* node, bitmap* map, int num) {
             // }
             link_block2node(node, map, extra_blocks[i]);
         }
+        if (_buffer_queue_dumped == -1) {
+            write_block(_buffer_queue_num, _buffer_queue);
+        }
         return;
     }
 }
@@ -193,9 +227,6 @@ void write_inode(memory_node* node, char* src, bitmap* map) {
 // Write n bytes of src.
 void writen_inode(memory_node *node, char *src, bitmap *map, int n) {
     int block_count = (n / BLOCKSIZE) + 1;
-    if (n >= 3000000) {
-         printf("hello!\n");
-    }   
     reallocate_blocks(node, map, block_count);
     // printf("%d\n", node->direct_index[0]);
     printf("block allocated\n");
