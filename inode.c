@@ -47,7 +47,6 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
             allocate_bits(map, a, 1);
             node->one_layer_index = a[0];
         }
-        // Index blocks is supposed to be allocated before this line.
         int offset = (count - DIRECT_INDEX_NUM) * sizeof(int);
         char buffer[1024];
         read_block(node->one_layer_index, buffer);
@@ -57,7 +56,6 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
                 4);
         write_block(node->one_layer_index, buffer);
         node->block_count++;
-        // return address;
     } else {
         if (node->two_layer_index == -1) {
             int a[257];
@@ -66,14 +64,11 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
             char buffer[1024];
             int i;
             for(i = 1; i < 257; i++) {
-                // printf("%d ", a[i]);
                 memcpy(buffer + (i - 1) * sizeof(int),
                         a + i, sizeof(int));
             }
             write_block(node->two_layer_index, buffer);
         }
-        // printf("hello world!\n");
-        // Index blocks is supposed to be allocated before this line.
         int offset = count - DIRECT_INDEX_NUM - ONE_LAYER_INDEX_NUM;
         int index_num = offset / ONE_LAYER_INDEX_NUM;
         int index_offset = offset % ONE_LAYER_INDEX_NUM;
@@ -106,10 +101,6 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
                    &b,
                    4);
         }
-        // memcpy(buffer + (index_offset) * sizeof(int),
-        //         &b,
-        //         4);
-        // write_block(index_address, buffer);
         node->block_count++;
     }
 }
@@ -164,7 +155,6 @@ static void reallocate_blocks(memory_node* node, bitmap* map, int num) {
             int address = find_block_address(node, i);
             free_bit(map, address);
         }
-        // node->block_count = num;
         return;
     }
     if (num > current_block_count) {
@@ -174,9 +164,6 @@ static void reallocate_blocks(memory_node* node, bitmap* map, int num) {
         allocate_bits(map, extra_blocks, t);
         int i;
         for(i = 0; i < t; i++) {
-            // if (num > 100000) {
-            //     printf("%d\n", extra_blocks[i]);
-            // }
             link_block2node(node, map, extra_blocks[i]);
         }
         if (_buffer_queue_dumped == -1) {
@@ -211,14 +198,11 @@ void dump_inode(memory_node node, int inode_num) {
 // Write SRC to blocks managed by MAP
 void write_inode(memory_node* node, char* src, bitmap* map) {
     int block_count = (strlen(src) / BLOCKSIZE) + 1; 
-    // printf("%d\n", block_count);
     reallocate_blocks(node, map, block_count);
-    // printf("%d\n", node->direct_index[0]);
     int i;
     char buffer[1024];
     for(i = 0; i < block_count; i++) {
         memcpy(buffer, src + (i * BLOCKSIZE), BLOCKSIZE);
-        // printf("%c\n", buffer[1023]);
         write_block(find_block_address(node, i),
                     buffer);
     }
@@ -228,19 +212,13 @@ void write_inode(memory_node* node, char* src, bitmap* map) {
 void writen_inode(memory_node *node, char *src, bitmap *map, int n) {
     int block_count = (n / BLOCKSIZE) + 1;
     reallocate_blocks(node, map, block_count);
-    // printf("%d\n", node->direct_index[0]);
-    printf("block allocated\n");
     int i;
     char buffer[1024];
     
     for (i = 0; i < block_count; i++)
     {
         memcpy(buffer, src + (i * BLOCKSIZE), BLOCKSIZE);
-        // printf("%c\n", buffer[1023]);
         int block = find_block_address(node, i);
-        // if (n >= 1000000) {
-        //     printf("%d \n", block);
-        // }   
         write_block(block,
                     buffer);
     }

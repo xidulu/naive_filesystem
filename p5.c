@@ -64,11 +64,9 @@ int my_open(char *path)
     {
       int find = search_file(general_buffer, buffer);
       if (find == -1) {
-        // printf("find %s in %s failed\n", buffer, general_buffer);
         return -1;
       } else {
         _filetable[_filetablesize++] = find;
-        // printf("new node%d\n", find);
         return (_filetablesize - 1);
       }
     }
@@ -77,7 +75,6 @@ int my_open(char *path)
       int find = search_file(general_buffer, buffer);
       if (find == -1)
       {
-        // printf("find %s in %s failed\n", buffer, general_buffer);
         return -1;
       }
       else
@@ -118,7 +115,6 @@ int my_creat(char *path)
       dump_inode(*cwd_node, cwd_node_num);
       // free(new_directory);
       // free(cwd_node);
-      // printf("file %s in new node:%d\n", buffer, a[0]);
       _filetable[_filetablesize++] = a[0];
       // free(new_directory);
       return _filetablesize - 1;
@@ -154,12 +150,6 @@ int my_read(int fd, void *buf, int count)
     buf2[i - start] = general_buffer[i];
   }
   _offsettable[fd] += count;
-  // printf("read:");
-  // for (i = 0; i < count; i++)
-  // {
-  //   printf("%d ", buf2[i]);
-  // }
-  // printf("\n");
   return count;
 }
 
@@ -176,12 +166,6 @@ int my_write(int fd, void *buf, int count)
   for(; i < start + count; i++) {
     general_buffer[i] = (char)*((char*)buf + i - start);
   }
-  // printf("write:");
-  // for(i = 0; i < count; i++) {
-  //   printf("%d ", general_buffer[i]);
-  // }
-  // printf("\n");
-  printf("count:%d\n", count);
   writen_inode(node, general_buffer, blockmap, count);
   dump_inode(*node, node_num);
   _offsettable[fd] += count;
@@ -203,13 +187,94 @@ int my_close(int fd)
 
 int my_remove(char *path)
 {
-  return 1;
+  char *temp = path;
+  char buffer[2048];
+  int cwd_node_num = ROOT_DIRECTORY_NODE;
+  memory_node *cwd_node = (memory_node *)malloc(sizeof(memory_node));
+  while (1)
+  {
+    temp = parse_path(temp, buffer);
+    load_inode(cwd_node, cwd_node_num);
+    read_inode(cwd_node, general_buffer);
+    if (temp[0] == '\0')
+    {
+      int find = search_file(general_buffer, buffer);
+      if (find == -1)
+      {
+        return -1;
+      }
+      else
+      {
+        char *new_directory;
+        new_directory = removefile(general_buffer, buffer);
+        write_inode(cwd_node, new_directory, blockmap);
+        free(new_directory);
+        free(cwd_node);
+        return find;
+      }
+    }
+    else
+    {
+      int find = search_file(general_buffer, buffer);
+      if (find == -1)
+      {
+        return -1;
+      }
+      else
+      {
+        cwd_node_num = find;
+      }
+    }
+  }
+  return -1;
 }
 
 int my_rename(char *old, char *new)
 {
-  printf("my_remove (%s, %s) not implemented\n", old, new);
-  return -1;
+  int node_num = my_remove(old);
+  if (node_num == -1) {
+    return -1;
+  }
+  char *temp = new;
+  char buffer[2048];
+  int cwd_node_num = ROOT_DIRECTORY_NODE;
+  memory_node *cwd_node = (memory_node *)malloc(sizeof(memory_node));
+  while (1)
+  {
+    temp = parse_path(temp, buffer);
+    load_inode(cwd_node, cwd_node_num);
+    read_inode(cwd_node, general_buffer);
+    if (temp[0] == '\0')
+    {
+      if (search_file(general_buffer, buffer) != -1)
+      {
+        return -1;
+      }
+      memory_node *new_node = (memory_node *)malloc(sizeof(memory_node));
+      initial_inode(new_node, blockmap);
+      dump_inode(*new_node, node_num);
+      char *new_directory;
+      new_directory = addfile(general_buffer, buffer, node_num);
+      write_inode(cwd_node, new_directory, blockmap);
+      dump_inode(*cwd_node, cwd_node_num);
+      free(new_directory);
+      free(cwd_node);
+      return 1;
+    }
+    else
+    {
+      int find = search_file(general_buffer, buffer);
+      if (find == -1)
+      {
+        return -1;
+      }
+      else
+      {
+        cwd_node_num = find;
+      }
+    }
+  }
+  return ;
 }
 
 /* only works if all but the last component of the path already exists */
@@ -228,7 +293,6 @@ int my_mkdir(char *path)
     {
       if (search_file(general_buffer, buffer) != -1)
       {
-        // printf("find %s in %s\n", buffer, general_buffer);
         return -1;
       }
       memory_node *new_node = (memory_node *)malloc(sizeof(memory_node));
@@ -249,7 +313,6 @@ int my_mkdir(char *path)
       int find = search_file(general_buffer, buffer);
       if (find == -1)
       {
-        // printf("hello2!\n");
         return -1;
       }
       else
@@ -277,7 +340,6 @@ int my_rmdir(char *path)
     read_inode(cwd_node, general_buffer);
     if (temp[0] == '\0')
     {
-      // printf("##\n%s;%s\n##",general_buffer, buffer);
       char *new_directory;
       new_directory = removefile(general_buffer, buffer);
       write_inode(cwd_node, new_directory, blockmap);
@@ -328,5 +390,4 @@ void my_mkfs()
   memset(general_buffer, 0, sizeof(general_buffer));
   memset(_filetable, 1, sizeof(_filetable));
   memset(_offsettable, 0, sizeof(_offsettable));
-  // printf ("my_mkfs not implemented\n");
 }
