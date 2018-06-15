@@ -24,7 +24,7 @@ static int _buffer_queue_num = -1;
 static int _buffer_queue_dumped = 0;
 
 static char _two_layer_index_cache[1024] = {0};
-static int  _two_layer_index_cache_num = -1;
+static int _two_layer_index_cache_num = -1;
 
 // Helper function,
 // add a new block B(block number) to NODE's index,
@@ -52,8 +52,8 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
         read_block(node->one_layer_index, buffer);
         int address;
         memcpy(buffer + offset,
-                &b,
-                4);
+               &b,
+               4);
         write_block(node->one_layer_index, buffer);
         node->block_count++;
     } else {
@@ -63,9 +63,9 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
             node->two_layer_index = a[0];
             char buffer[1024];
             int i;
-            for(i = 1; i < 257; i++) {
+            for (i = 1; i < 257; i++) {
                 memcpy(buffer + (i - 1) * sizeof(int),
-                        a + i, sizeof(int));
+                       a + i, sizeof(int));
             }
             write_block(node->two_layer_index, buffer);
         }
@@ -82,8 +82,8 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
         }
         int index_address;
         memcpy(&index_address,
-                buffer + (index_num) * sizeof(int),
-                4);
+               buffer + (index_num) * sizeof(int),
+               4);
         if (_buffer_queue_num == index_address) {
             memcpy(_buffer_queue + (index_offset) * sizeof(int),
                    &b,
@@ -118,8 +118,8 @@ static int find_block_address(memory_node *node, int n) {
         read_block(node->one_layer_index, buffer);
         int address;
         memcpy(&address,
-                buffer + offset,
-                4);
+               buffer + offset,
+               4);
         return address;
     } else {
         int offset = n - DIRECT_INDEX_NUM - ONE_LAYER_INDEX_NUM;
@@ -129,13 +129,13 @@ static int find_block_address(memory_node *node, int n) {
         read_block(node->two_layer_index, buffer);
         int index_address;
         memcpy(&index_address,
-                buffer + (index_num) * sizeof(int),
-                4);
+               buffer + (index_num) * sizeof(int),
+               4);
         read_block(index_address, buffer);
         int block_address;
         memcpy(&block_address,
-                buffer + (index_offset) * sizeof(int),
-                4);
+               buffer + (index_offset) * sizeof(int),
+               4);
         return block_address;
     }
 
@@ -147,11 +147,11 @@ static int find_block_address(memory_node *node, int n) {
 // reallocate number of the NODE's block to NUM blocks.
 // (blocks are managed by MAP)
 // We are trying to allocate as few new blocks as possible.
-static void reallocate_blocks(memory_node* node, bitmap* map, int num) {
+static void reallocate_blocks(memory_node *node, bitmap *map, int num) {
     int current_block_count = node->block_count;
     if (num < current_block_count) {
         int i;
-        for(i = num; i < current_block_count; i++) {
+        for (i = num; i < current_block_count; i++) {
             int address = find_block_address(node, i);
             free_bit(map, address);
         }
@@ -163,7 +163,7 @@ static void reallocate_blocks(memory_node* node, bitmap* map, int num) {
         int extra_blocks[MAX_BLOCK_COUNT];
         allocate_bits(map, extra_blocks, t);
         int i;
-        for(i = 0; i < t; i++) {
+        for (i = 0; i < t; i++) {
             link_block2node(node, map, extra_blocks[i]);
         }
         if (_buffer_queue_dumped == -1) {
@@ -191,17 +191,17 @@ void dump_inode(memory_node node, int inode_num) {
     int block_num = (inode_num / NODES_IN_BLOCK) + START_BLOCK;
     char buffer[1024];
     read_block(block_num, buffer);
-    memcpy(buffer + offset, (char*)&node, sizeof(node));
+    memcpy(buffer + offset, (char *) &node, sizeof(node));
     write_block(block_num, buffer);
 }
 
 // Write SRC to blocks managed by MAP
-void write_inode(memory_node* node, char* src, bitmap* map) {
-    int block_count = (strlen(src) / BLOCKSIZE) + 1; 
+void write_inode(memory_node *node, char *src, bitmap *map) {
+    int block_count = (strlen(src) / BLOCKSIZE) + 1;
     reallocate_blocks(node, map, block_count);
     int i;
     char buffer[1024];
-    for(i = 0; i < block_count; i++) {
+    for (i = 0; i < block_count; i++) {
         memcpy(buffer, src + (i * BLOCKSIZE), BLOCKSIZE);
         write_block(find_block_address(node, i),
                     buffer);
@@ -214,9 +214,8 @@ void writen_inode(memory_node *node, char *src, bitmap *map, int n) {
     reallocate_blocks(node, map, block_count);
     int i;
     char buffer[1024];
-    
-    for (i = 0; i < block_count; i++)
-    {
+
+    for (i = 0; i < block_count; i++) {
         memcpy(buffer, src + (i * BLOCKSIZE), BLOCKSIZE);
         int block = find_block_address(node, i);
         write_block(block,
@@ -226,12 +225,12 @@ void writen_inode(memory_node *node, char *src, bitmap *map, int n) {
 
 // Read all the blocks that belong to NODE,
 // store the result in SRC.
-void read_inode(memory_node *node, char* src) {
+void read_inode(memory_node *node, char *src) {
     int size = node->block_count;
     char buffer[1024];
     src[0] = '\0';
     int i;
-    for(i = 0; i < size; i++) {
+    for (i = 0; i < size; i++) {
         int num = find_block_address(node, i);
         read_block(num, buffer);
         memcpy(src + i * BLOCKSIZE, buffer, BLOCKSIZE);
@@ -241,14 +240,14 @@ void read_inode(memory_node *node, char* src) {
 
 // Read n bytes from the node,
 // basically a wrapper of READ_INODE()
-void readn_inode(memory_node *node, char* src, int n) {
+void readn_inode(memory_node *node, char *src, int n) {
     read_inode(node, src);
     memcpy(src, src, n);
 }
 
 // Intialization of NODE,
 // set index to -1 (not allocated).
-void initial_inode(memory_node *node, bitmap* map) {
+void initial_inode(memory_node *node, bitmap *map) {
     node->block_count = 0;
     node->one_layer_index = -1;
     node->two_layer_index = -1;

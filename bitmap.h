@@ -2,14 +2,13 @@
 #define BITMAP_H
 
 typedef struct bitmap bitmap;
-struct bitmap
-{
-    char* bits;
+struct bitmap {
+    char *bits;
     int size;
     int offset;
 };
 
-bitmap* create_bitmap(int n, int offset);
+bitmap *create_bitmap(int n, int offset);
 
 void allocate_bits(bitmap *map, int *a, int n);
 
@@ -19,7 +18,7 @@ int get_bit(bitmap *map, int index);
 
 void free_bits(bitmap *map, int *a);
 
-void free_bit(bitmap *map, int n); 
+void free_bit(bitmap *map, int n);
 
 void dump_bitmap(bitmap *map, int start, int len);
 

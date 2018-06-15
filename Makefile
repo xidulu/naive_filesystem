@@ -2,7 +2,7 @@ CC=clang
 MODULE = bitmap.c inode.c directory.c block.c p5.c
 
 build: $(MODULE)
-	$(CC) *.c -o p5.out
+	$(CC) $(MODULE)  testp5.c -o p5.out -fsanitize=undefined
 
 unit: $(MODULE)
 	$(CC) $(MODULE) unit.c -o unit_test.out && ./unit_test.out

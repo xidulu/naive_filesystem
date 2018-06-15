@@ -16,30 +16,28 @@
 // Max block number an inode can have
 #define MAX_BLOCK_COUNT 65536
 
-typedef 
-struct
-{
-    
+typedef
+struct {
+
 } disk_node;
 
-typedef 
-struct
-{
+typedef
+struct {
     int block_count;
     int direct_index[DIRECT_INDEX_NUM];
     int one_layer_index;
     int two_layer_index;
 } memory_node;
 
-void initial_inode(memory_node* node, bitmap* map);
+void initial_inode(memory_node *node, bitmap *map);
 
-void load_inode(memory_node* node, int inode_num);
+void load_inode(memory_node *node, int inode_num);
 
 void dump_inode(memory_node node, int inode_num);
 
-void write_inode(memory_node* node, char* src, bitmap* map);
+void write_inode(memory_node *node, char *src, bitmap *map);
 
-void writen_inode(memory_node* node, char* src, bitmap* map, int n);
+void writen_inode(memory_node *node, char *src, bitmap *map, int n);
 
 void read_inode(memory_node *node, char *src);
 

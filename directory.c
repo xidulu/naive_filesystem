@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
 #define d 256
 
 // @author:Xi Wang
@@ -18,8 +19,7 @@
 // Helper functoin: string matching
 // based on Rabin-Karp algorithm.
 // copy from geekforgeeks
-static int pattern_search(char* pat, char* txt)
-{
+static int pattern_search(char *pat, char *txt) {
     int M = strlen(pat);
     int N = strlen(txt);
     int i, j;
@@ -32,22 +32,18 @@ static int pattern_search(char* pat, char* txt)
         h = (h * d) % q;
     // Calculate the hash value of pattern and first
     // window of text
-    for (i = 0; i < M; i++)
-    {
+    for (i = 0; i < M; i++) {
         p = (d * p + pat[i]) % q;
         t = (d * t + txt[i]) % q;
     }
     // Slide the pattern over text one by one
-    for (i = 0; i <= N - M; i++)
-    {
+    for (i = 0; i <= N - M; i++) {
         // Check the hash values of current window of text
         // and pattern. If the hash values match then only
         // check for characters on by one
-        if (p == t)
-        {
+        if (p == t) {
             /* Check for characters one by one */
-            for (j = 0; j < M; j++)
-            {
+            for (j = 0; j < M; j++) {
                 if (txt[i + j] != pat[j])
                     break;
             }
@@ -58,8 +54,7 @@ static int pattern_search(char* pat, char* txt)
         }
         // Calculate hash value for next window of text: Remove
         // leading digit, add trailing digit
-        if (i < N - M)
-        {
+        if (i < N - M) {
             t = (d * (t - txt[i] * h) + txt[i + M]) % q;
             // We might get negative value of t, converting it
             // to positive
@@ -74,15 +69,15 @@ static int pattern_search(char* pat, char* txt)
 // return a new directory string describing the new
 // directory. 
 // (This function is non-destructive)
-char* addfile(char *directory, char *filename, int inode_num) {
+char *addfile(char *directory, char *filename, int inode_num) {
     char buffer[500];
     size_t origin_len = strlen(directory);
     size_t concat_len = sprintf(buffer,
-                            "%s,%u,",
-                            filename,
-                            inode_num);
+                                "%s,%u,",
+                                filename,
+                                inode_num);
     size_t new_len = origin_len + concat_len + 1;
-    char* new_directory = (char*)malloc(new_len);
+    char *new_directory = (char *) malloc(new_len);
     sprintf(new_directory, "%s%s", directory, buffer);
     //free(directory);
     return new_directory;
@@ -91,12 +86,12 @@ char* addfile(char *directory, char *filename, int inode_num) {
 // Input a directory, filename,
 // remove the corresponding entry in the string.
 // (This function is non-destructive)
-char* removefile(char *directory, char *filename) {
-    char* new_directory = (char*)malloc(strlen(directory));
+char *removefile(char *directory, char *filename) {
+    char *new_directory = (char *) malloc(strlen(directory));
     int pos = pattern_search(filename, directory);
     int end = pos + strlen(filename) + 1;
     // printf("%s\n%s\n", directory, filename);
-    while(directory[end] != ',') {
+    while (directory[end] != ',') {
         end++;
     }
     strncpy(new_directory, directory, pos);
@@ -110,7 +105,7 @@ char* removefile(char *directory, char *filename) {
 // return its inode number.(non-recursive)
 int search_file(char *directory, char *filename) {
     char pattern[500] = "";
-    char* comma = ",";
+    char *comma = ",";
     int inode_num;
     strcpy(pattern, filename);
     strcat(pattern, comma);
@@ -120,7 +115,7 @@ int search_file(char *directory, char *filename) {
         return -1;
     }
     // printf("%d\n", pos);
-    strcat(pattern,"%d");
+    strcat(pattern, "%d");
     sscanf(directory + pos, pattern, &inode_num);
     return inode_num;
 }
