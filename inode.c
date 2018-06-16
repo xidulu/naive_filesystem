@@ -3,6 +3,7 @@
 #include "p5.h"
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 // @author:Xi Wang
 // Config for inode section is defined in inode.h
@@ -23,6 +24,10 @@ static char _buffer_queue[BLOCKSIZE];
 static int _buffer_queue_num = -1;
 static int _buffer_queue_dumped = 0;
 
+// Caching address of blocks linked with an inode.
+static int _block_address_cache[MAX_BLOCK_COUNT];
+static int _block_address_cache_size = 0;
+
 static char _two_layer_index_cache[1024] = {0};
 static int _two_layer_index_cache_num = -1;
 
@@ -39,70 +44,71 @@ static void link_block2node(memory_node *node, bitmap *map, int b) {
     if (count < DIRECT_INDEX_NUM) {
         node->direct_index[count] = b;
         node->block_count++;
-        return;
-    }
-    if (count < DIRECT_INDEX_NUM + ONE_LAYER_INDEX_NUM) {
-        if (node->one_layer_index == -1) {
-            int a[1];
-            allocate_bits(map, a, 1);
-            node->one_layer_index = a[0];
-        }
-        int offset = (count - DIRECT_INDEX_NUM) * sizeof(int);
-        char buffer[1024];
-        read_block(node->one_layer_index, buffer);
-        int address;
-        memcpy(buffer + offset,
-               &b,
-               4);
-        write_block(node->one_layer_index, buffer);
-        node->block_count++;
     } else {
-        if (node->two_layer_index == -1) {
-            int a[257];
-            allocate_bits(map, a, 257);
-            node->two_layer_index = a[0];
+        if (count < DIRECT_INDEX_NUM + ONE_LAYER_INDEX_NUM) {
+            if (node->one_layer_index == -1) {
+                int a[1];
+                allocate_bits(map, a, 1);
+                node->one_layer_index = a[0];
+            }
+            int offset = (count - DIRECT_INDEX_NUM) * sizeof(int);
             char buffer[1024];
-            int i;
-            for (i = 1; i < 257; i++) {
-                memcpy(buffer + (i - 1) * sizeof(int),
-                       a + i, sizeof(int));
-            }
-            write_block(node->two_layer_index, buffer);
-        }
-        int offset = count - DIRECT_INDEX_NUM - ONE_LAYER_INDEX_NUM;
-        int index_num = offset / ONE_LAYER_INDEX_NUM;
-        int index_offset = offset % ONE_LAYER_INDEX_NUM;
-        char buffer[1024];
-        if (_two_layer_index_cache_num == node->two_layer_index) {
-            memcpy(buffer, _two_layer_index_cache, BLOCKSIZE);
+            read_block(node->one_layer_index, buffer);
+            int address;
+            memcpy(buffer + offset,
+                &b,
+                4);
+            write_block(node->one_layer_index, buffer);
+            node->block_count++;
         } else {
-            read_block(node->two_layer_index, buffer);
-            memcpy(_two_layer_index_cache, buffer, BLOCKSIZE);
-            _two_layer_index_cache_num = node->two_layer_index;
-        }
-        int index_address;
-        memcpy(&index_address,
-               buffer + (index_num) * sizeof(int),
-               4);
-        if (_buffer_queue_num == index_address) {
-            memcpy(_buffer_queue + (index_offset) * sizeof(int),
-                   &b,
-                   4);
-            if (index_offset == (ONE_LAYER_INDEX_NUM - 1)) {
-                write_block(_buffer_queue_num, _buffer_queue);
-                memset(_buffer_queue, 0, sizeof(_buffer_queue));
-                _buffer_queue_dumped = 1;
+            if (node->two_layer_index == -1) {
+                int a[257];
+                allocate_bits(map, a, 257);
+                node->two_layer_index = a[0];
+                char buffer[1024];
+                int i;
+                for (i = 1; i < 257; i++) {
+                    memcpy(buffer + (i - 1) * sizeof(int),
+                        a + i, sizeof(int));
+                }
+                write_block(node->two_layer_index, buffer);
             }
-        } else {
-            _buffer_queue_dumped = -1;
-            read_block(index_address, _buffer_queue);
-            _buffer_queue_num = index_address;
-            memcpy(_buffer_queue + (index_offset) * sizeof(int),
-                   &b,
-                   4);
+            int offset = count - DIRECT_INDEX_NUM - ONE_LAYER_INDEX_NUM;
+            int index_num = offset / ONE_LAYER_INDEX_NUM;
+            int index_offset = offset % ONE_LAYER_INDEX_NUM;
+            char buffer[1024];
+            if (_two_layer_index_cache_num == node->two_layer_index) {
+                memcpy(buffer, _two_layer_index_cache, BLOCKSIZE);
+            } else {
+                read_block(node->two_layer_index, buffer);
+                memcpy(_two_layer_index_cache, buffer, BLOCKSIZE);
+                _two_layer_index_cache_num = node->two_layer_index;
+            }
+            int index_address;
+            memcpy(&index_address,
+                buffer + (index_num) * sizeof(int),
+                4);
+            if (_buffer_queue_num == index_address) {
+                memcpy(_buffer_queue + (index_offset) * sizeof(int),
+                    &b,
+                    4);
+                if (index_offset == (ONE_LAYER_INDEX_NUM - 1)) {
+                    write_block(_buffer_queue_num, _buffer_queue);
+                    memset(_buffer_queue, 0, sizeof(_buffer_queue));
+                    _buffer_queue_dumped = 1;
+                }
+            } else {
+                _buffer_queue_dumped = -1;
+                read_block(index_address, _buffer_queue);
+                _buffer_queue_num = index_address;
+                memcpy(_buffer_queue + (index_offset) * sizeof(int),
+                    &b,
+                    4);
+            }
+            node->block_count++;
         }
-        node->block_count++;
     }
+    _block_address_cache[count] = b;
 }
 
 // Helper function,
@@ -214,10 +220,9 @@ void writen_inode(memory_node *node, char *src, bitmap *map, int n) {
     reallocate_blocks(node, map, block_count);
     int i;
     char buffer[1024];
-
     for (i = 0; i < block_count; i++) {
         memcpy(buffer, src + (i * BLOCKSIZE), BLOCKSIZE);
-        int block = find_block_address(node, i);
+        int block = _block_address_cache[i];
         write_block(block,
                     buffer);
     }

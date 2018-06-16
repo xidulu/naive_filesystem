@@ -16,9 +16,8 @@ static int devsize = 0;
  * and -1 otherwise */
 int dev_open() {
     struct stat st;
-
     if (fd < 0) {
-        fd = open("/home/xi/Desktop/project5_2/ram_disk/simulated_device", O_RDWR);
+        fd = open("./ram_disk/simulated_device", O_RDWR);
         if (fd < 0) {
             perror("open");
             return -1;
