@@ -78,6 +78,7 @@ char *addfile(char *directory, char *filename, int inode_num) {
                                 inode_num);
     size_t new_len = origin_len + concat_len + 1;
     char *new_directory = (char *) malloc(new_len);
+    memset(new_directory, 0, new_len);
     sprintf(new_directory, "%s%s", directory, buffer);
     //free(directory);
     return new_directory;
@@ -88,6 +89,7 @@ char *addfile(char *directory, char *filename, int inode_num) {
 // (This function is non-destructive)
 char *removefile(char *directory, char *filename) {
     char *new_directory = (char *) malloc(strlen(directory));
+    memset(new_directory, 0, sizeof(strlen(directory)));
     int pos = pattern_search(filename, directory);
     int end = pos + strlen(filename) + 1;
     // printf("%s\n%s\n", directory, filename);
