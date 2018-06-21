@@ -1,2 +1,4 @@
 simulated_device
 *.out
+Doxyfile
+html/

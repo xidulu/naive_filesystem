@@ -165,7 +165,6 @@ static void reallocate_blocks(memory_node *node, bitmap *map, int num) {
     }
     if (num > current_block_count) {
         int t = num - current_block_count;
-        // node->block_count = num;
         int extra_blocks[MAX_BLOCK_COUNT];
         allocate_bits(map, extra_blocks, t);
         int i;

@@ -273,7 +273,6 @@ int my_mkdir(char *path) {
             }
         }
     }
-    printf("wtf?\n");
     return -1;
 }
 
@@ -306,7 +305,6 @@ int my_rmdir(char *path) {
             }
         }
     }
-    printf("WTF?\n");
     return -1;
 }
 

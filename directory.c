@@ -92,13 +92,11 @@ char *removefile(char *directory, char *filename) {
     memset(new_directory, 0, sizeof(strlen(directory)));
     int pos = pattern_search(filename, directory);
     int end = pos + strlen(filename) + 1;
-    // printf("%s\n%s\n", directory, filename);
     while (directory[end] != ',') {
         end++;
     }
     strncpy(new_directory, directory, pos);
     strcat(new_directory, directory + end + 1);
-    // printf("%s\n", directory + end);
     return new_directory;
 }
 
@@ -111,12 +109,10 @@ int search_file(char *directory, char *filename) {
     int inode_num;
     strcpy(pattern, filename);
     strcat(pattern, comma);
-    // printf("%s\n", pattern);
     int pos = pattern_search(pattern, directory);
     if (pos == -1) {
         return -1;
     }
-    // printf("%d\n", pos);
     strcat(pattern, "%d");
     sscanf(directory + pos, pattern, &inode_num);
     return inode_num;
@@ -124,7 +120,6 @@ int search_file(char *directory, char *filename) {
 
 int is_empty(char *directory) {
     int len = strlen(directory);
-    // printf("len:%d\n", len);
     if (len == 0) {
         return 1;
     } else {

@@ -37,7 +37,6 @@ void allocate_bits(bitmap *map, int *a, int n) {
     int size = map->size;
     int count = 0;
     int i;
-    // printf("size: %d \n", size);
     for (i = 0; i < size; i++) {
         if (get_bit(map, i) == 0) {
             a[count++] = i + map->offset;
